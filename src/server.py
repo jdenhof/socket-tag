@@ -100,10 +100,9 @@ def game_loop():
                         and abs(player['y'] - position['y']) <= GameConfig.COLLISION_DIST
                 ):
                     with it_lock:
-                        with position_lock:
-                            it_player = player_id
-                            position["it"] = False
-                            player["it"] = True
+                        it_player = player_id
+                        position["it"] = False
+                        player["it"] = True
         time.sleep(0.03)
 
 def server_main(host, port):
