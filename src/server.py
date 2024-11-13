@@ -69,7 +69,6 @@ def game_loop():
 
     while True:
         # Process each client input
-        print(input_queue.empty())
         while input_queue.not_empty:
             try:
                 player_id, client_input = input_queue.get_nowait()
