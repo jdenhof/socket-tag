@@ -66,7 +66,30 @@ def broadcast_positions(interval=0.03):
                 conn.close()
         time.sleep(max(0, interval - (time.time() - start_time)))
 
-def game_loop():
+def it_loop():
+    while not game_over.is_set():
+        new_it_player = None
+        with position_lock:
+            with it_lock:
+                it_player_pos = player_positions.get(it_player)
+                if it_player_pos:
+                    for player_id, player in player_positions.items():
+                        if player_id == it_player:
+                            continue
+                        # Process player input
+                        x_dist = abs(player['x'] - it_player_pos['x'])
+                        y_dist = abs(player['y'] - it_player_pos['y'])
+                        print(f"Distance from {it_player}->{player_id} x: {x_dist} y: {y_dist}")
+                        if (x_dist <=  GameConfig.COLLISION_DIST and y_dist <= GameConfig.COLLISION_DIST):
+                            new_it_player = player_id
+                    if new_it_player:
+                        it_player = new_it_player
+                        it_player_pos["it"] = False
+                        player_positions[it_player]["it"] = True
+
+        time.sleep(GameConfig.SERVER_SLEEP if new_it_player else GameConfig.TAG_DELAY)
+
+def movement_loop():
     global player_positions
     global it_player
 
@@ -91,26 +114,6 @@ def game_loop():
                             player_positions[player_id]["x"] += GameConfig.MAX_SPEED
             except queue.Empty:
                 pass
-
-        with position_lock:
-            it_player_pos = player_positions[it_player]
-            new_it_player = None
-            for player_id, player in player_positions.items():
-                if player_id == it_player:
-                    continue
-                # Process player input
-                if (
-                    abs(player['x'] - it_player_pos['x']) <=  GameConfig.COLLISION_DIST \
-                        and abs(player['y'] - it_player_pos['y']) <= GameConfig.COLLISION_DIST
-                ):
-                    new_it_player = player_id
-
-            if new_it_player:
-                with it_lock:
-                    it_player = player_id
-                    it_player_pos["it"] = False
-                    player["it"] = True
-        time.sleep(0.03)
 
 def server_main(host, port):
 
