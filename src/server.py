@@ -10,6 +10,7 @@ from game import *
 
 player_positions = {}
 position_lock = threading.Lock()
+game_over = threading.Event()
 it_lock = threading.Lock()
 clients = []
 input_queue = queue.Queue()
@@ -26,7 +27,7 @@ def handle_client(conn, addr):
             it_player = player_id
         player_positions[player_id] = {"x": 0, "y": 0, "it": it_player == player_id }
 
-    while True:
+    while not game_over.is_set():
         try:
             data = conn.recv(1024).decode()
             if data:
@@ -51,7 +52,7 @@ def handle_client(conn, addr):
                     it_player = None
 
 def broadcast_positions(interval=0.03):
-    while True:
+    while not game_over.is_set():
         start_time = time.time()
         for conn in clients:
             try:
@@ -67,12 +68,13 @@ def game_loop():
     global player_positions
     global it_player
 
-    while True:
+    while not game_over.is_set():
         # Process each client input
         while input_queue.not_empty:
             try:
                 player_id, client_input = input_queue.get_nowait()
                 if player_positions.get(player_id) == None:
+                    game_over.set()
                     raise RuntimeError(f"Attempting to modify player position for player {player_id} that doesn't exist\n\t{player_positions}")
                 print("Got input from player: ", player_id, client_input)
                 with position_lock:
@@ -112,7 +114,7 @@ def server_main(host, port):
     threading.Thread(target=broadcast_positions, daemon=True).start()
     threading.Thread(target=game_loop, daemon=True).start()
 
-    while True:
+    while not game_over.is_set():
         conn, addr = server.accept()
         clients.append(conn)
         threading.Thread(target=handle_client, args=(conn, addr)).start()
