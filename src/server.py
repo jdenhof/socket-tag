@@ -41,10 +41,10 @@ def handle_client(conn, addr):
                 print("Received data from player:", player_id)
         except (ConnectionResetError, OSError):
             print(f"Closing player {player_id}'s connection")
+
             clients.remove(conn)
             conn.close()
-            break
-        finally:
+
             with position_lock:
                 if player_positions.get(player_id):
                     print("Removing player", player_id)
