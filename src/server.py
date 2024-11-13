@@ -30,7 +30,11 @@ def handle_client(conn, addr):
         try:
             data = conn.recv(1024).decode()
             if data:
-                input_queue.put((player_id, data))  # Enqueue client input
+                _input = {}
+                for d in data.split('\n'):
+                    if d:
+                        _input.update(json.loads(d))
+                input_queue.put((player_id, _input))  # Enqueue client input
                 print("Received data from player:", player_id)
         except (ConnectionResetError, OSError):
             print(f"Closing player {player_id}'s connection")
@@ -65,7 +69,8 @@ def game_loop():
 
     while True:
         # Process each client input
-        while not input_queue.empty():
+        print(input_queue.empty())
+        while input_queue.not_empty:
             try:
                 player_id, client_input = input_queue.get_nowait()
                 print("Got input from player: ", player_id, client_input)
