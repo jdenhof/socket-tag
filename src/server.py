@@ -92,16 +92,16 @@ def game_loop():
                 pass
 
         with position_lock:
+            it_player_pos = player_positions[it_player]
             for player_id, player in player_positions.items():
                 # Process player input
-                position = player_positions[it_player]
                 if (
-                    abs(player['x'] - position['x']) <=  GameConfig.COLLISION_DIST \
-                        and abs(player['y'] - position['y']) <= GameConfig.COLLISION_DIST
+                    abs(player['x'] - it_player_pos['x']) <=  GameConfig.COLLISION_DIST \
+                        and abs(player['y'] - it_player_pos['y']) <= GameConfig.COLLISION_DIST
                 ):
                     with it_lock:
                         it_player = player_id
-                        position["it"] = False
+                        it_player_pos["it"] = False
                         player["it"] = True
         time.sleep(0.03)
 
