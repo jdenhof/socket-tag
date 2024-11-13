@@ -76,7 +76,7 @@ def send_data(sock):
             except queue.Empty:
                 continue
             try:
-                sock.sendall(command.encode() + "\n")
+                sock.sendall(command.encode() + b"\n")
             except (BrokenPipeError, OSError) as e:
                 print("Error sending data:", e)
                 break
