@@ -33,6 +33,7 @@ def handle_client(conn, addr):
                 input_queue.put((player_id, data))  # Enqueue client input
                 print("Received data from player:", player_id)
         except (ConnectionResetError, OSError):
+            print(f"Closing player {player_id}'s connection")
             clients.remove(conn)
             conn.close()
             break
