@@ -51,7 +51,6 @@ def broadcast_positions(interval=0.03):
         for conn in clients:
             try:
                 position_data = json.dumps(player_positions).encode()
-                print("Position data broadcasting:", position_data)
                 position_data += b"\n"
                 conn.sendall(position_data)
             except (BrokenPipeError, OSError):

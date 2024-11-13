@@ -91,7 +91,6 @@ def receive_data(sock):
                 with position_lock:
                     data = data.split('\n')[-2]
                     player_positions = json.loads(data)
-                print("Received position update:", player_positions)
         except (ConnectionResetError, OSError) as e:
             print("Error receiving data:", e)
             break
