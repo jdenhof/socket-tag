@@ -38,7 +38,6 @@ def handle_client(conn, addr):
                     if d:
                         _input.update(json.loads(d))
                 input_queue.put((player_id, _input))  # Enqueue client input
-                print("Received data from player:", player_id)
         except (ConnectionResetError, OSError):
             print(f"Closing player {player_id}'s connection")
 
@@ -78,7 +77,7 @@ def game_loop():
                 if player_positions.get(player_id) == None:
                     game_over.set()
                     raise RuntimeError(f"Attempting to modify player position for player {player_id} that doesn't exist\n\t{player_positions}")
-                print("Got input from player: ", player_id, client_input)
+
                 with position_lock:
                     if client_input["action"] == "move":
                         if client_input["direction"] == "up":
