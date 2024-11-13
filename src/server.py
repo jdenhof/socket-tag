@@ -95,6 +95,8 @@ def game_loop():
             it_player_pos = player_positions[it_player]
             new_it_player = None
             for player_id, player in player_positions.items():
+                if player_id == it_player:
+                    continue
                 # Process player input
                 if (
                     abs(player['x'] - it_player_pos['x']) <=  GameConfig.COLLISION_DIST \
