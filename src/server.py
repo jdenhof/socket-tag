@@ -72,6 +72,8 @@ def game_loop():
         while input_queue.not_empty:
             try:
                 player_id, client_input = input_queue.get_nowait()
+                if player_positions.get(player_id) == None:
+                    raise RuntimeError(f"Attempting to modify player position for player {player_id} that doesn't exist\n\t{player_positions}")
                 print("Got input from player: ", player_id, client_input)
                 with position_lock:
                     if client_input["action"] == "move":
