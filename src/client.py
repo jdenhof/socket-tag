@@ -57,9 +57,16 @@ def game():
         if command:
             command = json.dumps(command)
             input_queue.put(command)
+
         with position_lock:
             for name, p in player_positions.items():
-                pygame.draw.circle(screen, Colors.BLUE if p["it"] else Colors.RED, (p['x'], p['y']), GameConfig.PLAYER_SIZE)
+                color = Colors.BLUE
+                if p["it"]:
+                    color = Colors.RED
+                if p.get("tag_delay"):
+                    color = Colors.YELLOW
+
+                pygame.draw.circle(screen, color, (p['x'], p['y']), GameConfig.PLAYER_SIZE)
 
         # Update the display
         pygame.display.flip()
