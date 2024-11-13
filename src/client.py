@@ -39,24 +39,21 @@ def game():
         command = None
         # Get keys pressed
         keys = pygame.key.get_pressed()
-        if keys.count(True) > 1:
-            print(keys.count(True))
-            pass
-        # Movement based on key presses
-        if keys.count(True) > 1:
-            pass
-        elif keys[pygame.K_w] or keys[pygame.K_UP]:
-            command = { "action": "move", "direction": "up" }
-        elif keys[pygame.K_s] or keys[pygame.K_DOWN]:
-            command = { "action": "move", "direction": "down" }
-        elif keys[pygame.K_a] or keys[pygame.K_LEFT]:
-            command = { "action": "move", "direction": "left" }
-        elif keys[pygame.K_d] or keys[pygame.K_RIGHT]:
-            command = { "action": "move", "direction": "right" }
+        if keys.count(True) >= 1:
+            command = { "action": "move", "direction": [] }
+            # Movement based on key presses
+            if keys[pygame.K_w] or keys[pygame.K_UP]:
+                command["direction"].append("up")
+            if keys[pygame.K_s] or keys[pygame.K_DOWN]:
+                command["direction"].append("down")
+            if keys[pygame.K_a] or keys[pygame.K_LEFT]:
+                command["direction"].append("left")
+            if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
+                command["direction"].append("right")
 
-        if command:
-            command = json.dumps(command)
-            input_queue.put(command)
+            if command:
+                command = json.dumps(command)
+                input_queue.put(command)
 
         with position_lock:
             for name, p in player_positions.items():

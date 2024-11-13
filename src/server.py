@@ -128,13 +128,13 @@ def movement_loop():
 
                 with position_lock:
                     if client_input["action"] == "move":
-                        if client_input["direction"] == "up":
+                        if "up" in client_input["direction"]:
                             player_configs[player_id]["y"] -= GameConfig.MAX_SPEED
-                        elif client_input["direction"] == "down":
+                        if "down" in client_input["direction"]:
                             player_configs[player_id]["y"] += GameConfig.MAX_SPEED
-                        elif client_input["direction"] == "left":
+                        if "left" in client_input["direction"]:
                             player_configs[player_id]["x"] -= GameConfig.MAX_SPEED
-                        elif client_input["direction"] == "right":
+                        if "right" in client_input["direction"]:
                             player_configs[player_id]["x"] += GameConfig.MAX_SPEED
             except queue.Empty:
                 pass
