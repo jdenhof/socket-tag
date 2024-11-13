@@ -26,6 +26,7 @@ def handle_client(conn, addr):
 
     with position_lock:
         if it_player == None:
+            print(f"Player {player_id} is the first connection so by default is it")
             it_player = player_id
         player_positions[player_id] = {"x": 0, "y": 0, "it": it_player == player_id }
 
