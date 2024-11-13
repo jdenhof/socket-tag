@@ -20,7 +20,9 @@ it_player = None
 
 def handle_client(conn, addr):
     global it_player
+    global player_positions
     player_id = addr[1]
+    print(f"Handeling player connection {player_id}")
 
     with position_lock:
         if it_player == None:
