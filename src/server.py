@@ -67,6 +67,8 @@ def broadcast_positions(interval=0.03):
         time.sleep(max(0, interval - (time.time() - start_time)))
 
 def it_loop():
+    global player_positions
+    global it_player
     while not game_over.is_set():
         new_it_player = None
         with position_lock:
@@ -87,7 +89,7 @@ def it_loop():
                         it_player_pos["it"] = False
                         player_positions[it_player]["it"] = True
 
-        time.sleep(GameConfig.SERVER_SLEEP if new_it_player else GameConfig.TAG_DELAY)
+        time.sleep(GameConfig.TAG_DELAY if new_it_player else GameConfig.SERVER_SLEEP)
 
 def movement_loop():
     global player_positions
@@ -122,7 +124,8 @@ def server_main(host, port):
     server.listen()
 
     threading.Thread(target=broadcast_positions, daemon=True).start()
-    threading.Thread(target=game_loop, daemon=True).start()
+    threading.Thread(target=movement_loop, daemon=True).start()
+    threading.Thread(target=it_loop, daemon=True).start()
 
     while not game_over.is_set():
         conn, addr = server.accept()
