@@ -63,8 +63,8 @@ def game():
                 color = Colors.BLUE
                 if p["it"]:
                     color = Colors.RED
-                if p.get("tag_delay"):
-                    color = Colors.YELLOW
+                if p.get("it_delay"):
+                    color = Colors.GREEN
 
                 pygame.draw.circle(screen, color, (p['x'], p['y']), GameConfig.PLAYER_SIZE)
 
