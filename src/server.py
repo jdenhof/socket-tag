@@ -93,7 +93,6 @@ def broadcast_positions(interval=0.03):
 
         for conn in clients:
             try:
-                print(player_configs)
                 position_data = json.dumps(player_configs).encode()
                 position_data += b"\n"
                 conn.sendall(position_data)
