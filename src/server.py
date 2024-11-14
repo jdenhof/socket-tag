@@ -1,4 +1,5 @@
 # Builtins
+import sys
 import threading
 import argparse
 import socket
@@ -12,24 +13,40 @@ player_configs = {}
 position_lock = threading.Lock()
 game_over = threading.Event()
 can_tag = threading.Event()
+input_queue = queue.Queue()
 it_lock = threading.Lock()
 clients = []
-input_queue = queue.Queue()
 
 it_player = None
+
+def register_new_player(player_id):
+    global player_configs
+
+    if player_id in player_configs:
+        sys.stderr.write(f"Attempting to register player {player_id} who has already been registered")
+        return
+
+    with position_lock:
+        player_configs[player_id] = {
+            "x": 0,
+            "y": 0,
+            "it": False,
+            "vx": 0,
+            "vy": 0
+        }
+
+    with it_lock:
+        if it_player is None:
+            player_tagged(player_id)
 
 
 def handle_client(conn, addr):
     global it_player
     global player_configs
     player_id = addr[1]
-    print(f"Handeling player connection {player_id}")
 
-    with position_lock:
-        if it_player == None:
-            print(f"Player {player_id} is the first connection so by default is it")
-            it_player = player_id
-        player_configs[player_id] = {"x": 0, "y": 0, "it": it_player == player_id }
+    sys.stderr.write(f"Handeling player connection {player_id}")
+    register_new_player(player_id)
 
     while not game_over.is_set():
         try:
@@ -57,8 +74,26 @@ def handle_client(conn, addr):
 def broadcast_positions(interval=0.03):
     while not game_over.is_set():
         start_time = time.time()
+
+        with position_lock:
+            for config in player_configs.values():
+
+                config["x"] += config["vx"]
+                config["y"] += config["vy"]
+
+                if config["vy"] > 0:
+                    config["vy"] = max(0, config["vy"] - GameConfig.FRICTION)
+                if config["vy"] < 0:
+                    config["vy"] = min(0, config["vy"] + GameConfig.FRICTION)
+
+                if config["vx"] > 0:
+                    config["vx"] = max(0, config["vx"] - GameConfig.FRICTION)
+                if config["vx"] < 0:
+                    config["vx"] = min(0, config["vx"] + GameConfig.FRICTION)
+
         for conn in clients:
             try:
+                print(player_configs)
                 position_data = json.dumps(player_configs).encode()
                 position_data += b"\n"
                 conn.sendall(position_data)
@@ -68,18 +103,22 @@ def broadcast_positions(interval=0.03):
         time.sleep(max(0, interval - (time.time() - start_time)))
 
 def player_tagged(player_id):
+    threading.Thread(target=player_tagged_thread, args=(player_id,)).start()
+
+def player_tagged_thread(player_id):
     global player_configs
     global it_player
 
     can_tag.clear()
 
-    old_it_player = it_player
+    current_it_player = it_player
 
     with it_lock:
         it_player = player_id
 
     with position_lock:
-        player_configs[old_it_player]["it"] = False
+        if current_it_player:
+            player_configs[current_it_player]["it"] = False
         player_configs[player_id]["it"] = True
         player_configs[player_id]["it_delay"] = True
 
@@ -97,19 +136,18 @@ def it_loop():
 
     while not game_over.is_set():
         can_tag.wait()
-        with position_lock:
-            with it_lock:
-                it_player_pos = player_configs.get(it_player)
-                if it_player_pos:
-                    for player_id, player in player_configs.items():
-                        if player_id == it_player:
-                            continue
-                        # Process player input
-                        x_dist = abs(player['x'] - it_player_pos['x'])
-                        y_dist = abs(player['y'] - it_player_pos['y'])
-                        if (x_dist <=  GameConfig.COLLISION_DIST and y_dist <= GameConfig.COLLISION_DIST):
-                            threading.Thread(target=player_tagged, args=(player_id,)).start()
-                            break
+        with position_lock, it_lock:
+            it_player_pos = player_configs.get(it_player)
+            if it_player_pos:
+                for player_id, player in player_configs.items():
+                    if player_id == it_player:
+                        continue
+                    # Process player input
+                    x_dist = abs(player['x'] - it_player_pos['x'])
+                    y_dist = abs(player['y'] - it_player_pos['y'])
+                    if (x_dist <=  GameConfig.COLLISION_DIST and y_dist <= GameConfig.COLLISION_DIST):
+                        player_tagged(player_id)
+                        break
 
         time.sleep(GameConfig.SERVER_SLEEP)
 
@@ -129,13 +167,17 @@ def movement_loop():
                 with position_lock:
                     if client_input["action"] == "move":
                         if "up" in client_input["direction"]:
-                            player_configs[player_id]["y"] -= GameConfig.MAX_SPEED
+                            if abs(player_configs[player_id]["vy"]) < GameConfig.MAX_SPEED:
+                                player_configs[player_id]["vy"] -= GameConfig.PLAYER_SPEED
                         if "down" in client_input["direction"]:
-                            player_configs[player_id]["y"] += GameConfig.MAX_SPEED
+                            if abs(player_configs[player_id]["vy"]) < GameConfig.MAX_SPEED:
+                                player_configs[player_id]["vy"] += GameConfig.PLAYER_SPEED
                         if "left" in client_input["direction"]:
-                            player_configs[player_id]["x"] -= GameConfig.MAX_SPEED
+                            if abs(player_configs[player_id]["vx"]) < GameConfig.MAX_SPEED:
+                                player_configs[player_id]["vx"] -= GameConfig.PLAYER_SPEED
                         if "right" in client_input["direction"]:
-                            player_configs[player_id]["x"] += GameConfig.MAX_SPEED
+                            if abs(player_configs[player_id]["vx"]) < GameConfig.MAX_SPEED:
+                                player_configs[player_id]["vx"] += GameConfig.PLAYER_SPEED
             except queue.Empty:
                 pass
 
