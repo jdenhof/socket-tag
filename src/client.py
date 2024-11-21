@@ -31,7 +31,7 @@ class GameClient:
         pygame.init()
 
         # Screen settings
-        width, height = 800, 800
+        width, height = GameConfig.WINDOW_WIDTH, GameConfig.WINDOW_HEIGHT
         screen = pygame.display.set_mode((width, height))
 
         pygame.display.set_caption("Tag")

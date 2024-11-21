@@ -13,6 +13,8 @@ class GameConfig:
     COLLISION_DIST = 25
     SERVER_SLEEP = .0166
     FRICTION = 1
+    WINDOW_WIDTH = 800
+    WINDOW_HEIGHT = 800
 
 class Colors:
     WHITE = (255, 255, 255)
@@ -65,8 +67,8 @@ class GameState:
                 raise RuntimeError("Invalid command! No type available")
             elif cmd["type"] == "join":
                 self.players[player_id] = {
-                    "x": 0,
-                    "y": 0,
+                    "x": GameConfig.WINDOW_WIDTH // 2,
+                    "y": GameConfig.WINDOW_HEIGHT // 2,
                     "vx": 0,
                     "vy": 0
                 }
@@ -103,8 +105,10 @@ class GameState:
         with self._lock:
             # Update player positions
             for player_id, config in self.players.items():
-                config["x"] += config["vx"]
-                config["y"] += config["vy"]
+                if (config["vx"] > 0 or config["x"] - GameConfig.PLAYER_SIZE > 0) and (config["vx"] < 0 or config["x"] + GameConfig.PLAYER_SIZE < GameConfig.WINDOW_HEIGHT):
+                    config["x"] += config["vx"]
+                if (config["vy"] > 0 or config["y"] - GameConfig.PLAYER_SIZE > 0) and (config["vy"] < 0 or config["y"] + GameConfig.PLAYER_SIZE < GameConfig.WINDOW_HEIGHT):
+                    config["y"] += config["vy"]
 
                 # Apply friction
                 if config["vx"] > 0:
