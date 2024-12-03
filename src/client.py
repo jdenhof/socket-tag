@@ -20,11 +20,14 @@ class GameClient:
         self.game_started = threading.Event()
         self.input_queue = queue.Queue()
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sock.bind(('0.0.0.0', self.port))
         self.game_state = None
+        self.joined = threading.Event()
 
     def join_game(self):
         join_request = {"type": "join"}
         self.sock.sendto(json.dumps(join_request).encode(), (self.host, self.port))
+        self.joined.set()
 
     def game_loop(self):
         print("Starting Game Loop")
@@ -94,6 +97,9 @@ class GameClient:
                 break
 
     def receive_game_state(self):
+        #self.sock.bind((self.host, self.port+1))
+        #self.sock.bind(('', 0))
+        self.joined.wait()
         while True:
             data, _ = self.sock.recvfrom(self.buffer_size)
 
